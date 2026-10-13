@@ -1,0 +1,39 @@
+name: daily-agent
+on:
+  schedule: [{ cron: "0 5 * * *" }]
+  workflow_dispatch:
+    inputs:
+      dry_run: { description: "Run the pipeline without calling a model", default: "false" }
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  loop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install
+      - run: npm install -g @anthropic-ai/claude-code
+      - run: |
+          git config user.name  "automock-agent"
+          git config user.email "automock-agent@users.noreply.github.com"
+      - name: Run Triage -> Dev -> QA -> Refactor
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          DRY_RUN: ${{ inputs.dry_run == 'true' && '1' || '0' }}
+          MAX_TASKS: "3"
+        run: npm run agent:daily
+      - name: Open PR and enable auto-merge (branch protection requires the "verify" check)
+        if: ${{ inputs.dry_run != 'true' }}
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          BRANCH="agent/$(date -u +%F)"
+          if git rev-parse --verify "$BRANCH" >/dev/null 2>&1 && [ "$(git rev-list --count origin/main..$BRANCH)" -gt 0 ]; then
+            git push -f origin "$BRANCH"
+            gh pr create --base main --head "$BRANCH" --title "agent: daily improvements $(date -u +%F)" --body-file "reports/$(date -u +%F).md" || true
+            gh pr merge "$BRANCH" --auto --squash
+          fi

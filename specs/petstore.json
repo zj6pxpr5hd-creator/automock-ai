@@ -1,0 +1,43 @@
+{
+  "openapi": "3.0.3",
+  "info": { "title": "Petstore (sample)", "version": "1.0.0" },
+  "paths": {
+    "/pets": {
+      "get": { "responses": { "200": { "description": "ok", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Pet" } } } } } } },
+      "post": {
+        "requestBody": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/NewPet" } } } },
+        "responses": { "201": { "description": "created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Pet" } } } } }
+      }
+    },
+    "/pets/{id}": {
+      "get": { "responses": { "200": { "description": "ok", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Pet" } } } }, "404": { "description": "missing", "content": { "application/json": { "schema": { "type": "object", "properties": { "error": { "type": "string" } } } } } } } },
+      "put": {
+        "requestBody": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/NewPet" } } } },
+        "responses": { "200": { "description": "ok", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Pet" } } } } }
+      },
+      "delete": { "responses": { "204": { "description": "deleted" } } }
+    },
+    "/stats": {
+      "get": { "responses": { "200": { "description": "ok", "content": { "application/json": { "schema": { "type": "object", "properties": { "total": { "type": "integer", "minimum": 0, "maximum": 50 }, "updatedAt": { "type": "string", "format": "date-time" } } } } } } } }
+    }
+  },
+  "components": {
+    "schemas": {
+      "NewPet": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "tag": { "type": "string", "enum": ["dog", "cat", "bird"] },
+          "ownerEmail": { "type": "string", "format": "email" }
+        }
+      },
+      "Pet": {
+        "allOf": [
+          { "$ref": "#/components/schemas/NewPet" },
+          { "type": "object", "required": ["id"], "properties": { "id": { "type": "integer" } } }
+        ]
+      }
+    }
+  }
+}

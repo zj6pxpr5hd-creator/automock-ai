@@ -1,0 +1,2 @@
+{"id":"fb-001","text":"GET collections should support ?limit=&offset= pagination, returning the same objects in order.","source":"seed"}
+{"id":"fb-002","text":"PATCH on an item should be supported by the engine even if the spec only declares PUT (merge semantics).","source":"seed"}
